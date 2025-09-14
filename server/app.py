@@ -65,7 +65,26 @@ def get_dog(id: int) -> tuple[Response, int] | Response:
     
     return jsonify(dog)
 
-## HERE
+"""
+'/api/breeds' エンドポイントへのGETリクエストを処理します。
+
+データベースから全ての犬種（Breed）レコードを取得し、それぞれの 'id' と 'name' を含む辞書のリストにシリアライズして、
+JSONレスポンスとして返します。
+
+戻り値:
+    Response: 犬種一覧を含むFlaskのJSONレスポンス
+"""
+@app.route('/api/breeds', methods=['GET'])
+def get_breeds() -> Response:
+    breeds_query = Breed.query.all()
+    breeds_list: List[Dict[str, Any]] = [
+        {
+            'id': breed.id,
+            'name': breed.name
+        }
+        for breed in breeds_query
+    ]
+    return jsonify(breeds_list)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5100) # Port 5100 to avoid macOS conflicts
