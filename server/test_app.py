@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 import json
 from app import app  # Changed from relative import to absolute import
+from models.dog import validate_dog_age
 
 # filepath: server/test_app.py
 class TestApp(unittest.TestCase):
@@ -90,6 +91,55 @@ class TestApp(unittest.TestCase):
         self.assertTrue(isinstance(data, list))
         self.assertEqual(len(data), 1)
         self.assertEqual(set(data[0].keys()), {'id', 'name', 'breed'})
+
+
+class TestDogAgeValidation(unittest.TestCase):
+    """犬の年齢検証関数のテストクラス"""
+    
+    def test_valid_age_zero(self):
+        """0歳は有効であること"""
+        result = validate_dog_age(0)
+        self.assertEqual(result, 0)
+    
+    def test_valid_age_twenty(self):
+        """20歳は有効であること"""
+        result = validate_dog_age(20)
+        self.assertEqual(result, 20)
+    
+    def test_valid_age_middle_range(self):
+        """範囲内の年齢（5歳）は有効であること"""
+        result = validate_dog_age(5)
+        self.assertEqual(result, 5)
+    
+    def test_invalid_age_negative(self):
+        """負の年齢は無効でエラーをスローすること"""
+        with self.assertRaises(ValueError) as context:
+            validate_dog_age(-1)
+        self.assertIn("must be between 0 and 20 years", str(context.exception))
+    
+    def test_invalid_age_too_high(self):
+        """21歳以上は無効でエラーをスローすること"""
+        with self.assertRaises(ValueError) as context:
+            validate_dog_age(21)
+        self.assertIn("must be between 0 and 20 years", str(context.exception))
+    
+    def test_invalid_age_none(self):
+        """None値は無効でエラーをスローすること"""
+        with self.assertRaises(ValueError) as context:
+            validate_dog_age(None)
+        self.assertIn("Age cannot be None", str(context.exception))
+    
+    def test_invalid_age_string(self):
+        """文字列は無効でエラーをスローすること"""
+        with self.assertRaises(ValueError) as context:
+            validate_dog_age("5")
+        self.assertIn("Age must be an integer", str(context.exception))
+    
+    def test_invalid_age_float(self):
+        """小数は無効でエラーをスローすること"""
+        with self.assertRaises(ValueError) as context:
+            validate_dog_age(5.5)
+        self.assertIn("Age must be an integer", str(context.exception))
 
 
 if __name__ == '__main__':
