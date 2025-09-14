@@ -7,7 +7,15 @@
         breed: string;
     }
 
+    interface Breed {
+        id: number;
+        name: string;
+    }
+
     export let dogs: Dog[] = [];
+    let allDogs: Dog[] = [];
+    let breeds: Breed[] = [];
+    let selectedBreed: string = '';
     let loading = true;
     let error: string | null = null;
 
@@ -16,7 +24,9 @@
         try {
             const response = await fetch('/api/dogs');
             if(response.ok) {
-                dogs = await response.json();
+                const dogsData = await response.json();
+                allDogs = dogsData;
+                dogs = dogsData;
             } else {
                 error = `Failed to fetch data: ${response.status} ${response.statusText}`;
             }
@@ -27,14 +37,58 @@
         }
     };
 
+    const fetchBreeds = async () => {
+        try {
+            const response = await fetch('/api/breeds');
+            if(response.ok) {
+                breeds = await response.json();
+            }
+        } catch (err) {
+            console.error('Error fetching breeds:', err);
+        }
+    };
+
+    const filterDogs = () => {
+        if (selectedBreed === '') {
+            dogs = allDogs;
+        } else {
+            dogs = allDogs.filter(dog => dog.breed === selectedBreed);
+        }
+    };
+
+    const handleBreedChange = (event: Event) => {
+        const target = event.target as HTMLSelectElement;
+        selectedBreed = target.value;
+        filterDogs();
+    };
+
     onMount(() => {
         fetchDogs();
+        fetchBreeds();
     });
 </script>
 
 <div>
     <h2 class="text-2xl font-medium mb-6 text-slate-100">Available Dogs</h2>
     
+    <!-- Breed filter dropdown -->
+    <div class="mb-6">
+        <label for="breed-filter" class="block text-sm font-medium text-slate-300 mb-2">
+            Filter by Breed
+        </label>
+        <select
+            id="breed-filter"
+            bind:value={selectedBreed}
+            on:change={handleBreedChange}
+            class="w-full max-w-xs px-3 py-2 bg-slate-800/60 backdrop-blur-sm border border-slate-700/50 rounded-lg text-slate-100 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+        >
+            <option value="">All Breeds</option>
+            {#each breeds as breed (breed.id)}
+                <option value={breed.name}>{breed.name}</option>
+            {/each}
+        </select>
+    </div>
+
     {#if loading}
         <!-- loading animation -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
